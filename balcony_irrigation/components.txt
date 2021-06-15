@@ -1,0 +1,12 @@
+1. Andruino Leonardo
+
+2. RTC 1307
+
+3. Two line relay with optio isolation
+
+4. Water pomp x2
+
+5. Aquarium thin pipes
+
+6. Tank of water
+
