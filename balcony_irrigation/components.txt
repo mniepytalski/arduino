@@ -1,12 +1,26 @@
 1. Andruino Leonardo
+https://botland.com.pl/arduino-moduly-glowne/1213-arduino-leonardo-a000057-8058333491141.html
+https://store.arduino.cc/arduino-leonardo-with-headers
 
 2. RTC 1307
+https://botland.com.pl/moduly-rtc/2717-msx-rtc-ds1307-i2c-zegar-czasu-rzeczywistego-bateria.html
+https://github.com/turicas/DS1307/
 
 3. Two line relay with optio isolation
 
+https://botland.com.pl/przekazniki-przekazniki-arduino/2579-modul-przekaznikow-4-kanaly-z-optoizolacja-styki-10a-250vac-cewka-5v.html
+
 4. Water pomp x2
+https://botland.com.pl/pompy/14164-pompa-wodna-6v.html
 
 5. Aquarium thin pipes
 
 6. Tank of water
+
+
+Appendix:
+1. LCD display
+https://botland.com.pl/wyswietlacze-alfanumeryczne-i-graficzne/2640-wyswietlacz-lcd-4x20-znakow-niebieski-konwerter-i2c-lcm1602.html
+
+
 
