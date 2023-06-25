@@ -98,7 +98,7 @@ int key3 = 8;
 int engineCounter1 = 0;
 int engineCounter2 = 0;
 int timerCounter = 0;
-int engineWorkTime = 5;
+int engineWorkTime = 30;
 
 void setup()
 {
@@ -133,7 +133,7 @@ void loop()
 
   if (lcdStatus!=1 ) {
     lcd.setCursor(3, 0);
-    lcd.print("System podlewania");
+    lcd.print("Podlewaczka v001");
   }
   for ( ; ; ) {
     wdt_reset();
@@ -150,10 +150,10 @@ void loop()
     if(digitalRead(key3) == LOW ) {
       pumpsOn(2);
     }
-    if ( checkEnginesStatus(9,0) ) {
+    if ( checkEnginesStatus(21,02) ) {
       pumpsOn(1);
     }
-    if ( checkEnginesStatus(9,5) ) {
+    if ( checkEnginesStatus(21,03) ) {
       pumpsOn(2);          
     }
     
@@ -178,8 +178,8 @@ boolean checkEnginesStatus(int hour,int minute) {
   if ( timerCounter>0 ) {
     return false;
   } 
-//  boolean test = clock.getHour() == hour && clock.getMinute() == minute ;
-  boolean test = clock.getMinute()%10 == minute ;
+  boolean test = clock.getHour() == hour && clock.getMinute() == minute ;
+//  boolean test = clock.getMinute()%10 == minute ;
   if ( test ) {
     timerCounter=60; // block it on X seconds
   }
