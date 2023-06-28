@@ -98,7 +98,7 @@ int key3 = 8;
 int engineCounter1 = 0;
 int engineCounter2 = 0;
 int timerCounter = 0;
-int engineWorkTime = 30;
+int engineWorkTime = 50;
 
 void setup()
 {
@@ -133,7 +133,7 @@ void loop()
 
   if (lcdStatus!=1 ) {
     lcd.setCursor(3, 0);
-    lcd.print("Podlewaczka v001");
+    lcd.print("Podlewaczka v002");
   }
   for ( ; ; ) {
     wdt_reset();
@@ -150,10 +150,10 @@ void loop()
     if(digitalRead(key3) == LOW ) {
       pumpsOn(2);
     }
-    if ( checkEnginesStatus(21,02) ) {
+    if ( checkEnginesStatus(8,0) || checkEnginesStatus(20,30) ) {
       pumpsOn(1);
     }
-    if ( checkEnginesStatus(21,03) ) {
+    if ( checkEnginesStatus(8,5) || checkEnginesStatus(20,35) ) {
       pumpsOn(2);          
     }
     
