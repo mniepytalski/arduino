@@ -1,4 +1,5 @@
 #include "RTCDS1307.h"
+#include "LowPower.h"
 #include <stdio.h>
 #include <avr/wdt.h>
 #include <Wire.h>
@@ -41,8 +42,8 @@ class Clock {
    }
 
    void Clock::setTime() {
-    rtc.setDate(21, 6, 28);
-    rtc.setTime(16, 13, 0);
+    rtc.setDate(23, 9, 12);
+    rtc.setTime(22, 50, 0);
    }
    
    void Clock::getTime() {
@@ -79,6 +80,52 @@ class Clock {
     return minute;
   }
 
+////////////////////////////////////////////////////////////////////////
+
+class Pump {
+  private:
+    int pumpPin;
+    int engineCounter = 0;
+    int engineWorkTime = 25;
+    int engineWorkCounter = 0;
+
+  public:
+    Pump(int pin);
+    void pumpOff();
+    void pumpsOn();
+    void checkPump();
+    void checkPumpAndOff();
+};
+
+Pump::Pump(int pin) {
+  pumpPin = pin;
+  pinMode(pumpPin, OUTPUT);
+}  
+
+void Pump::pumpOff() {
+  digitalWrite(pumpPin, HIGH);
+}
+
+void Pump::pumpsOn() {
+  if ( engineCounter<=0 ) {
+    engineWorkCounter++;
+    digitalWrite(pumpPin, LOW);
+    engineCounter = engineWorkTime;
+  }
+}
+
+void Pump::checkPump() {
+
+}
+
+void Pump::checkPumpAndOff() {
+    if ( engineCounter>0 ) {
+      engineCounter = engineCounter - 1 ;
+    } else {
+      pumpOff();
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -98,7 +145,8 @@ int key3 = 8;
 int engineCounter1 = 0;
 int engineCounter2 = 0;
 int timerCounter = 0;
-int engineWorkTime = 50;
+int engineWorkTime = 25;
+int engineWorkCounter = 0;
 
 void setup()
 {
@@ -133,7 +181,7 @@ void loop()
 
   if (lcdStatus!=1 ) {
     lcd.setCursor(3, 0);
-    lcd.print("Podlewaczka v002");
+    lcd.print("Podlewaczka v004");
   }
   for ( ; ; ) {
     wdt_reset();
@@ -150,10 +198,10 @@ void loop()
     if(digitalRead(key3) == LOW ) {
       pumpsOn(2);
     }
-    if ( checkEnginesStatus(8,0) || checkEnginesStatus(20,30) ) {
+    if ( checkEnginesStatus(8,0) ) {
       pumpsOn(1);
     }
-    if ( checkEnginesStatus(8,5) || checkEnginesStatus(20,35) ) {
+    if ( checkEnginesStatus(8,5) ) {
       pumpsOn(2);          
     }
     
@@ -161,7 +209,10 @@ void loop()
     if ( timerCounter>0 ) {
       timerCounter--;
     } 
-    delay(1000);
+    LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+    LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+    
+//    delay(500);
   }
 }
 
@@ -197,6 +248,7 @@ void pumpsOn(int number) {
 
 void pumpOnIfPossible(int *engineCounter,int pumpPin) {
   if ( *engineCounter<=0 ) {
+    engineWorkCounter++;
     digitalWrite(pumpPin, LOW);
     *engineCounter = engineWorkTime;
   }
