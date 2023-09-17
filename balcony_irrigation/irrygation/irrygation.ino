@@ -5,13 +5,14 @@
 #include <Wire.h>
 #include <hd44780.h>                       // main hd44780 header
 #include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
-
+#include "key.h"
+#include "pump.h"
+#include "clock.h"
 
 /*-----( Declare Constants )-----*/
 // LCD geometry
 const int LCD_COLS = 20;
 const int LCD_ROWS = 4;
-
 
 RTCDS1307 rtc(0x68);
 
@@ -34,128 +35,65 @@ class Clock {
     uint8_t getMinute();
 };
 
-   Clock::Clock() {
-   }
+Clock::Clock() {
+}
 
-   void Clock::start() {
-      rtc.begin();    
-   }
+void Clock::start() {
+  rtc.begin();    
+}
 
-   void Clock::setTime() {
-    rtc.setDate(23, 9, 12);
-    rtc.setTime(22, 50, 0);
-   }
+void Clock::setTime() {
+  rtc.setDate(23, 9, 12);
+  rtc.setTime(22, 50, 0);
+}
    
-   void Clock::getTime() {
-    rtc.getDate(year, month, day, weekday);
-    rtc.getTime(hour, minute, second, period);
-    rtc.setMode(0);
-    rtc.getTime(hour, minute, second, period);
-   }
-
-  void Clock::sendToSerial() {
-    Serial.print(getFullTimeToString());
-    Serial.println();
-  }  
-
-  char* Clock::getDateToString() {
-    sprintf(date, "%d-%02d-%02d", year+ 2000,month,day);
-    return date;
-  }
-
-  char* Clock::getTimeToString() {
-    sprintf(date, "%02d:%02d:%02d", hour,minute,second);
-    return date;
-  }
-
-  char* Clock::getFullTimeToString(){
-    sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", year+ 2000,month,day,hour,minute,second);
-    return date;     
-  }
-
-  uint8_t Clock::getHour() {
-    return hour;
-  }
-  uint8_t Clock::getMinute() {
-    return minute;
-  }
-
-////////////////////////////////////////////////////////////////////////
-
-class Pump {
-private:
-    int pin;
-    bool status;
-    int engineCounter = 0;
-    int initWorkTime = 25;
-    int workCounter = 0;
-
-public:
-    explicit Pump(int pin);
-    void on();
-    void checkAndOff();
-    int getPin();
-    int getEngineCounter();
-
-private:
-    void off();
-};
-
-
-Pump::Pump(int pumpPin) {
-    pin = pumpPin;
-    status = false;
-    pinMode(pin, OUTPUT);
-    off();
+void Clock::getTime() {
+  rtc.getDate(year, month, day, weekday);
+  rtc.getTime(hour, minute, second, period);
+  rtc.setMode(0);
+  rtc.getTime(hour, minute, second, period);
 }
 
-int Pump::getPin() {
-  return pin;
+void Clock::sendToSerial() {
+  Serial.print(getFullTimeToString());
+  Serial.println();
+}  
+
+char* Clock::getDateToString() {
+  sprintf(date, "%d-%02d-%02d", year+ 2000,month,day);
+  return date;
 }
 
-int Pump::getEngineCounter() {
-  return engineCounter;
+char* Clock::getTimeToString() {
+  sprintf(date, "%02d:%02d:%02d", hour,minute,second);
+  return date;
 }
 
-void Pump::on() {
-    if ( engineCounter<=0 ) {
-        workCounter++;
-        status = true;
-        digitalWrite(pin, LOW);
-        engineCounter = initWorkTime;
-    }
+char* Clock::getFullTimeToString(){
+  sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", year+ 2000,month,day,hour,minute,second);
+  return date;     
 }
 
-void Pump::checkAndOff() {
-    if ( !status ) {
-        return;
-    }
-    if ( engineCounter>0 ) {
-        engineCounter = engineCounter - 1 ;
-    } else {
-        off();
-    }
+uint8_t Clock::getHour() {
+  return hour;
 }
 
-void Pump::off() {
-    status = false;
-    digitalWrite(pin, HIGH);
+uint8_t Clock::getMinute() {
+  return minute;
 }
 
 ////////////////////////////////////////////////////////////////////////
-
 hd44780_I2Cexp lcd; // declare lcd object: auto locate & auto config expander chip  
 int lcdStatus = 1; // 1 -on, 0-off
-
 
 Clock clock;
 
 Pump pump1(7);
 Pump pump2(6);
 
-int key1 = 5;
-int key2 = 4;
-int key3 = 8;
+int keyOutput = 5;
+Key key1(4);
+Key key2(8);
 int timerCounter = 0;
 int systemCounter = 0;
 
@@ -167,13 +105,8 @@ void setup()
       hd44780::fatalError(lcdStatus); // does not return
     }
   }
-
-  pinMode(key1, OUTPUT);
-  pinMode(key2, INPUT);
-  pinMode(key3, INPUT);
-  digitalWrite(key1, LOW);
-  digitalWrite(key2, HIGH);
-  digitalWrite(key3, HIGH);
+  pinMode(keyOutput, OUTPUT);
+  digitalWrite(keyOutput, LOW);
   
   clock.start();
 //  clock.setTime();
@@ -198,17 +131,11 @@ void loop()
     }
 
     checkKeysStatus();
-    if(digitalRead(key2) == LOW ) {
+    if(checkEnginesStatus(8,0) || key1.isKeyPressed()) {
       pump1.on();
     }
-    if(digitalRead(key3) == LOW ) {
+    if(checkEnginesStatus(8,5) || key2.isKeyPressed()) {
       pump2.on();
-    }
-    if ( checkEnginesStatus(8,0) ) {
-      pump1.on();
-    }
-    if ( checkEnginesStatus(8,5) ) {
-      pump2.on();        
     }
     
     checkPumps();
@@ -218,7 +145,7 @@ void loop()
 
     if ( systemCounter>=0 && systemCounter<60 ) {
       delay(1000);
-    } else {}
+    } else {
       LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
       LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
     }
@@ -229,9 +156,9 @@ void loop()
 void checkKeysStatus() {
     if (lcdStatus!=1 ) {
       lcd.setCursor(0, 0);
-      lcd.print(digitalRead(key2));
+      lcd.print(key1.read());
       lcd.setCursor(1, 0);
-      lcd.print(digitalRead(key3));
+      lcd.print(key2.read());
     }
 }
 
@@ -276,6 +203,7 @@ void initWatchdog() {
   WDP1 = 1 :For 2000ms Time-out
   WDP0 = 1 :For 2000ms Time-out
   */
+
   // Enter Watchdog Configuration mode:
   WDTCSR |= (1<<WDCE) | (1<<WDE);
   // Set Watchdog settings:
