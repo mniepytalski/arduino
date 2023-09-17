@@ -1,13 +1,13 @@
 #include "RTCDS1307.h"
 #include "LowPower.h"
 #include <stdio.h>
-#include <avr/wdt.h>
 #include <Wire.h>
 #include <hd44780.h>                       // main hd44780 header
 #include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
 #include "key.h"
 #include "pump.h"
 #include "clock.h"
+#include "watchdog.h"
 
 /*-----( Declare Constants )-----*/
 // LCD geometry
@@ -24,11 +24,13 @@ Clock clock;
 Pump pump1(7);
 Pump pump2(6);
 
-int keyOutput = 5;
+int keyDriver = 5;
 Key key1(4);
 Key key2(8);
 int timerCounter = 0;
 int systemCounter = 0;
+
+Watchdog watchdog;
 
 void setup()
 {
@@ -38,13 +40,13 @@ void setup()
       hd44780::fatalError(lcdStatus); // does not return
     }
   }
-  pinMode(keyOutput, OUTPUT);
-  digitalWrite(keyOutput, LOW);
+  pinMode(keyDriver, OUTPUT);
+  digitalWrite(keyDriver, LOW);
   
   clock.start();
 //  clock.setTime();
 
-  initWatchdog();
+  watchdog.init();
 }
 
 void loop()
@@ -56,14 +58,14 @@ void loop()
     lcd.print("Podlewaczka v005");
   }
   for ( ; ; ) {
-    wdt_reset();
+    watchdog.reset();
     clock.getTime();
     if ( lcdStatus!=1 ) {
       lcd.setCursor(0, 1);
       lcd.print(clock.getFullTimeToString());
     }
 
-    checkKeysStatus();
+    printKeysStatus();
     if(checkEnginesStatus(8,0) || key1.isKeyPressed()) {
       pump1.on();
     }
@@ -72,6 +74,7 @@ void loop()
     }
     
     checkPumps();
+    printInfo();
     if ( timerCounter>0 ) {
       timerCounter--;
     } 
@@ -86,7 +89,7 @@ void loop()
   }
 }
 
-void checkKeysStatus() {
+void printKeysStatus() {
     if (lcdStatus!=1 ) {
       lcd.setCursor(0, 0);
       lcd.print(key1.read());
@@ -110,6 +113,9 @@ boolean checkEnginesStatus(int hour,int minute) {
 void checkPumps() {
   pump1.checkAndOff();
   pump2.checkAndOff();
+}
+
+void printInfo() {
   printInfo(2, pump1.getPin(), pump1.getEngineCounter());
   printInfo(3, pump2.getPin(), pump2.getEngineCounter());
 }
@@ -122,24 +128,4 @@ void printInfo(int lcdRow, int pumpPin, int engineCounter) {
   lcd.setCursor(0, lcdRow);
   sprintf(info,"%d>%3d, timer:%2d",pumpPin, engineCounter, timerCounter);
   lcd.print(info);  
-}
-
-void initWatchdog() {
-  cli();         // disable all interrupts
-  wdt_reset();   // reset the WDT timer
-  /*
-  WDTCSR configuration:
-  WDIE = 1: Interrupt Enable
-  WDE = 1 :Reset Enable
-  WDP3 = 1 :For 2000ms Time-out
-  WDP2 = 1 :For 2000ms Time-out
-  WDP1 = 1 :For 2000ms Time-out
-  WDP0 = 1 :For 2000ms Time-out
-  */
-
-  // Enter Watchdog Configuration mode:
-  WDTCSR |= (1<<WDCE) | (1<<WDE);
-  // Set Watchdog settings:
-  WDTCSR = (1<<WDIE) | (1<<WDE) | (1<<WDP3) | (1<<WDP2) | (1<<WDP1) | (1<<WDP0);
-  sei();
 }
