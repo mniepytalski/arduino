@@ -83,49 +83,64 @@ class Clock {
 ////////////////////////////////////////////////////////////////////////
 
 class Pump {
-  private:
-    int pumpPin;
+private:
+    int pin;
+    bool status;
     int engineCounter = 0;
-    int engineWorkTime = 25;
-    int engineWorkCounter = 0;
+    int initWorkTime = 25;
+    int workCounter = 0;
 
-  public:
-    Pump(int pin);
-    void pumpOff();
-    void pumpsOn();
-    void checkPump();
-    void checkPumpAndOff();
+public:
+    explicit Pump(int pin);
+    void on();
+    void checkAndOff();
+    int getPin();
+    int getEngineCounter();
+
+private:
+    void off();
 };
 
-Pump::Pump(int pin) {
-  pumpPin = pin;
-  pinMode(pumpPin, OUTPUT);
-}  
 
-void Pump::pumpOff() {
-  digitalWrite(pumpPin, HIGH);
+Pump::Pump(int pumpPin) {
+    pin = pumpPin;
+    status = false;
+    pinMode(pin, OUTPUT);
+    off();
 }
 
-void Pump::pumpsOn() {
-  if ( engineCounter<=0 ) {
-    engineWorkCounter++;
-    digitalWrite(pumpPin, LOW);
-    engineCounter = engineWorkTime;
-  }
+int Pump::getPin() {
+  return pin;
 }
 
-void Pump::checkPump() {
-
+int Pump::getEngineCounter() {
+  return engineCounter;
 }
 
-void Pump::checkPumpAndOff() {
-    if ( engineCounter>0 ) {
-      engineCounter = engineCounter - 1 ;
-    } else {
-      pumpOff();
+void Pump::on() {
+    if ( engineCounter<=0 ) {
+        workCounter++;
+        status = true;
+        digitalWrite(pin, LOW);
+        engineCounter = initWorkTime;
     }
 }
 
+void Pump::checkAndOff() {
+    if ( !status ) {
+        return;
+    }
+    if ( engineCounter>0 ) {
+        engineCounter = engineCounter - 1 ;
+    } else {
+        off();
+    }
+}
+
+void Pump::off() {
+    status = false;
+    digitalWrite(pin, HIGH);
+}
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -135,18 +150,14 @@ int lcdStatus = 1; // 1 -on, 0-off
 
 Clock clock;
 
-int pumpPin1 = 7;     // pump 1 
-int pumpPin2 = 6;     // pump 2 
+Pump pump1(7);
+Pump pump2(6);
 
 int key1 = 5;
 int key2 = 4;
 int key3 = 8;
-
-int engineCounter1 = 0;
-int engineCounter2 = 0;
 int timerCounter = 0;
-int engineWorkTime = 25;
-int engineWorkCounter = 0;
+int systemCounter = 0;
 
 void setup()
 {
@@ -157,11 +168,6 @@ void setup()
     }
   }
 
-  pinMode(pumpPin1, OUTPUT);
-  pinMode(pumpPin2, OUTPUT);
-  pumpOff(pumpPin1);
-  pumpOff(pumpPin2);
-  
   pinMode(key1, OUTPUT);
   pinMode(key2, INPUT);
   pinMode(key3, INPUT);
@@ -181,7 +187,7 @@ void loop()
 
   if (lcdStatus!=1 ) {
     lcd.setCursor(3, 0);
-    lcd.print("Podlewaczka v004");
+    lcd.print("Podlewaczka v005");
   }
   for ( ; ; ) {
     wdt_reset();
@@ -193,26 +199,30 @@ void loop()
 
     checkKeysStatus();
     if(digitalRead(key2) == LOW ) {
-      pumpsOn(1);
+      pump1.on();
     }
     if(digitalRead(key3) == LOW ) {
-      pumpsOn(2);
+      pump2.on();
     }
     if ( checkEnginesStatus(8,0) ) {
-      pumpsOn(1);
+      pump1.on();
     }
     if ( checkEnginesStatus(8,5) ) {
-      pumpsOn(2);          
+      pump2.on();        
     }
     
     checkPumps();
     if ( timerCounter>0 ) {
       timerCounter--;
     } 
-    LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
-    LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
-    
-//    delay(500);
+
+    if ( systemCounter>=0 && systemCounter<60 ) {
+      delay(1000);
+    } else {}
+      LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+      LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
+    }
+    systemCounter++;
   }
 }
 
@@ -237,28 +247,11 @@ boolean checkEnginesStatus(int hour,int minute) {
   return test;
 }
 
-void pumpsOn(int number) {
-    if ( number==1 ) {
-      pumpOnIfPossible(&engineCounter1,pumpPin1);
-    } 
-    if ( number==2 ) {
-      pumpOnIfPossible(&engineCounter2,pumpPin2);
-    }
-}
-
-void pumpOnIfPossible(int *engineCounter,int pumpPin) {
-  if ( *engineCounter<=0 ) {
-    engineWorkCounter++;
-    digitalWrite(pumpPin, LOW);
-    *engineCounter = engineWorkTime;
-  }
-}
-
 void checkPumps() {
-  checkPumpAndOff(&engineCounter1,pumpPin1);
-  checkPumpAndOff(&engineCounter2,pumpPin2);
-  printInfo(2, pumpPin1,engineCounter1);
-  printInfo(3, pumpPin2,engineCounter2);
+  pump1.checkAndOff();
+  pump2.checkAndOff();
+  printInfo(2, pump1.getPin(), pump1.getEngineCounter());
+  printInfo(3, pump2.getPin(), pump2.getEngineCounter());
 }
 
 void printInfo(int lcdRow, int pumpPin, int engineCounter) {
@@ -269,18 +262,6 @@ void printInfo(int lcdRow, int pumpPin, int engineCounter) {
   lcd.setCursor(0, lcdRow);
   sprintf(info,"%d>%3d, timer:%2d",pumpPin, engineCounter, timerCounter);
   lcd.print(info);  
-}
-
-void checkPumpAndOff(int *engineCounter,int pumpPin) {
-    if ( *engineCounter>0 ) {
-      *engineCounter = *engineCounter - 1 ;
-    } else {
-      pumpOff(pumpPin);
-    }
-}
-
-void pumpOff(int pumpNumber) {
-  digitalWrite(pumpNumber, HIGH);
 }
 
 void initWatchdog() {
