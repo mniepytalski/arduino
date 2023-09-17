@@ -12,7 +12,7 @@ class Clock {
   public:
     Clock();
     void start();
-    void setTime();
+    void setTime(int hour, int minute, int second);
     void getTime();
     void sendToSerial();
     char* getDateToString();

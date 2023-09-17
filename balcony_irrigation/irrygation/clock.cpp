@@ -12,9 +12,9 @@ void Clock::start() {
   rtc.begin();    
 }
 
-void Clock::setTime() {
+void Clock::setTime(int hour, int minute, int second) {
   rtc.setDate(23, 9, 12);
-  rtc.setTime(22, 50, 0);
+  rtc.setTime(hour, minute, second);
 }
    
 void Clock::getTime() {

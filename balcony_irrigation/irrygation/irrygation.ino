@@ -44,7 +44,7 @@ void setup()
   digitalWrite(keyDriver, LOW);
   
   clock.start();
-//  clock.setTime();
+//  clock.setTime(19, 10, 0);
 
   watchdog.init();
 }
