@@ -15,6 +15,7 @@ public:
     void checkAndOff();
     int getPin();
     int getEngineCounter();
+    int getWorkCounter();
 
 private:
     void off();

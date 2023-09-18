@@ -16,6 +16,10 @@ int Pump::getEngineCounter() {
   return engineCounter;
 }
 
+int Pump::getWorkCounter() {
+  return workCounter;
+}
+
 void Pump::on() {
     if ( engineCounter<=0 ) {
         workCounter++;
