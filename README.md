@@ -1,6 +1,14 @@
-=
-= This is balcony irrygation system based on arduino.
-=
+
+┏━━━┓┃┃┃┏┓┃┃┃┃┃┃┃┃┃┃┃┏┓┃┃┃┃┃
+┃┏━┓┃┃┃┃┛┗┓┃┃┃┃┃┃┃┃┃┃┛┗┓┃┃┃┃
+┃┃┃┃┃┓┏┓┓┏┛━━┓┓┏┓━━┓┃┓┏┛┓━━┓
+┃┗━┛┃┃┃┃┃┃┃┏┓┃┗┛┃┃┓┃┃┃┃┃┫┏━┛
+┃┏━┓┃┗┛┃┃┗┓┗┛┃┃┃┃┗┛┗┓┃┗┓┃┗━┓
+┗┛┃┗┛━━┛┗━┛━━┛┻┻┛━━━┛┗━┛┛━━┛
+┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃
+┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃┃
+
+# This is balcony irrygation system based on arduino.
 
 Funcjonality
 Automated system for irrygation
