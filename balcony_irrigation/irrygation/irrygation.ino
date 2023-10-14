@@ -28,7 +28,7 @@ void setup()
   digitalWrite(keyDriver, LOW);
   
   clock.start();
-//  clock.setTime(21, 40, 0);
+//  clock.setTime(18, 14, 0);
 
   watchdog.init();
 }
@@ -38,8 +38,8 @@ void loop()
   clock.getTime();
 
   for ( ; ; ) {
-    sprintf(buffer,"System v08 %6x", systemCounter);
-    display.print(3, 0, buffer);
+    sprintf(buffer,"Sys v09 %6x, %x", systemCounter, clock.getDayCounter());
+    display.print(2, 0, buffer);
 
     watchdog.reset();
     clock.getTime();
@@ -55,6 +55,7 @@ void loop()
     
     checkPumps();
     printInfo();
+    printTemerature(0);
     if ( timerCounter>0 ) {
       timerCounter--;
     } 
@@ -79,6 +80,9 @@ void printKeysStatus() {
 }
 
 boolean checkConditionToOnEngines(int hour,int minute) {
+  if ( clock.getDay()<3 ) {
+    return false;
+  }
   if ( timerCounter>0 ) {
     return false;
   } 
@@ -100,6 +104,11 @@ void printInfo() {
 }
 
 void printInfo(int lcdRow, int workCounter, int engineCounter) {
-  sprintf(buffer,"%2X>%3d, timer:%2d", workCounter, engineCounter, timerCounter);
+  sprintf(buffer,"%2X>%3d,czas:%2d", workCounter, engineCounter, timerCounter);
   display.print(0, lcdRow, buffer);  
+}
+
+void printTemerature(int temperature) {
+  sprintf(buffer,"%2dC", temperature);
+  display.print(15, 2, buffer);  
 }
