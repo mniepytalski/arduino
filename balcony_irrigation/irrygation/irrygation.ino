@@ -13,7 +13,6 @@ Display display;
 Pump pump1(7);
 Pump pump2(6);
 
-int keyDriver = 5;
 Key key1(4);
 Key key2(8);
 int timerCounter = 0;
@@ -23,10 +22,7 @@ char buffer[20];
 
 void setup()
 {
-  display.init();
-  pinMode(keyDriver, OUTPUT);
-  digitalWrite(keyDriver, LOW);
-  
+  display.init();  
   clock.start();
 //  clock.setTime(18, 14, 0);
 
@@ -38,7 +34,7 @@ void loop()
   clock.getTime();
 
   for ( ; ; ) {
-    sprintf(buffer,"Sys v09 %6x, %x", systemCounter, clock.getDayCounter());
+    sprintf(buffer,"System%02x %06x,%x", 9, systemCounter, clock.getDayCounter());
     display.print(2, 0, buffer);
 
     watchdog.reset();
@@ -80,7 +76,7 @@ void printKeysStatus() {
 }
 
 boolean checkConditionToOnEngines(int hour,int minute) {
-  if ( clock.getDay()<3 ) {
+  if ( clock.getDay()>3 ) {
     return false;
   }
   if ( timerCounter>0 ) {
