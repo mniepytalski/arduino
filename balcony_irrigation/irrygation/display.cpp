@@ -32,3 +32,10 @@ void Display::print(int col, int row, char *text) {
     lcd.print(text);
   }
 }
+
+void Display::print(int col, int row, char character) {
+  if (lcdStatus!=1 ) {
+    lcd.setCursor(col, row);  
+    lcd.print(character);
+  }
+}

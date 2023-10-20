@@ -7,11 +7,13 @@
 #include "display.h"
 #include "key.h"
 
+#define REAL_SYSTEM
+
 Watchdog watchdog;
 Clock clock;
 Display display;
-Pump pump1(7);
-Pump pump2(6);
+Pump pump1(7, 8, 0);
+Pump pump2(6, 8, 5);
 
 Key key1(4);
 Key key2(8);
@@ -34,7 +36,7 @@ void loop()
   clock.getTime();
 
   for ( ; ; ) {
-    sprintf(buffer,"System%02x %06x,%x", 9, systemCounter, clock.getDayCounter());
+    sprintf(buffer,"System%02x %06x,%x", 11, systemCounter, clock.getDayCounter());
     display.print(2, 0, buffer);
 
     watchdog.reset();
@@ -42,10 +44,10 @@ void loop()
     display.print(0, 1, clock.getFullTimeToString());
 
     printKeysStatus();
-    if(checkConditionToOnEngines(8,0) || key1.isKeyPressed()) {
+    if(checkConditionToOnEngines(pump1.getWorkHour(),pump1.getWorkMinute()) || key1.isKeyPressed()) {
       pump1.on();
     }
-    if(checkConditionToOnEngines(8,5) || key2.isKeyPressed()) {
+    if(checkConditionToOnEngines(pump2.getWorkHour(),pump2.getWorkMinute()) || key2.isKeyPressed()) {
       pump2.on();
     }
     
@@ -62,7 +64,7 @@ void loop()
 }
 
 void sleep1s() {
-    if ( systemCounter>=0 && systemCounter<(2*60) ) {
+    if ( systemCounter>=0 && systemCounter<(5*60) ) {
       delay(1000);
     } else {
       LowPower.powerDown(SLEEP_500MS, ADC_OFF, BOD_OFF);
@@ -76,7 +78,7 @@ void printKeysStatus() {
 }
 
 boolean checkConditionToOnEngines(int hour,int minute) {
-  if ( clock.getDay()>3 ) {
+  if ( clock.getDayCounter()>=3 ) {
     return false;
   }
   if ( timerCounter>0 ) {
@@ -95,16 +97,21 @@ void checkPumps() {
 }
 
 void printInfo() {
-  printInfo(2, pump1.getWorkCounter(), pump1.getEngineCounter());
-  printInfo(3, pump2.getWorkCounter(), pump2.getEngineCounter());
+  printInfo(2, &pump1);
+  printInfo(3, &pump2);
 }
 
-void printInfo(int lcdRow, int workCounter, int engineCounter) {
-  sprintf(buffer,"%2X>%3d,czas:%2d", workCounter, engineCounter, timerCounter);
+void printInfo(int lcdRow, Pump *pump) {
+  sprintf(buffer,"%X>%02d,%02d:%02d>%d", pump->getWorkCounter(), pump->getEngineCounter(), 
+              pump->getWorkHour(), pump->getWorkMinute(), timerCounter);
   display.print(0, lcdRow, buffer);  
 }
 
 void printTemerature(int temperature) {
-  sprintf(buffer,"%2dC", temperature);
-  display.print(15, 2, buffer);  
+  sprintf(buffer,"%d%cC", temperature, 0xDF);
+  display.print(16, 2, buffer);  
+
+  //buffer[2] = 0xDF;
+  sprintf(buffer,"%c%d%cC", 0xF6, temperature, 0xDF);
+  display.print(15,3, buffer);
 }

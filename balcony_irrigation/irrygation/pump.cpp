@@ -1,10 +1,14 @@
 #include "pump.h"
 #include <Arduino.h>
 
-Pump::Pump(int pumpPin) {
+Pump::Pump(int pumpPin, int hour, int minute) {
     pin = pumpPin;
     status = false;
+    #ifdef REAL_SYSTEM
     pinMode(pin, OUTPUT);
+    #endif
+    workHour = hour;
+    workMinute = minute;
     off();
 }
 
@@ -24,7 +28,9 @@ void Pump::on() {
     if ( engineCounter<=0 ) {
         workCounter++;
         status = true;
+        #ifdef REAL_SYSTEM
         digitalWrite(pin, LOW);
+        #endif
         engineCounter = initWorkTime;
     }
 }
@@ -40,7 +46,25 @@ void Pump::checkAndOff() {
     }
 }
 
+int Pump::getWorkHour() {
+  return workHour;
+}
+
+int Pump::getWorkMinute() {
+  return workMinute;
+}
+
+void Pump::setWorkHour(int hour) {
+  workHour = hour;
+}
+
+void Pump::setWorkMinute(int minute) {
+  workMinute = minute;
+}
+
 void Pump::off() {
     status = false;
+    #ifdef REAL_SYSTEM
     digitalWrite(pin, HIGH);
+    #endif
 }

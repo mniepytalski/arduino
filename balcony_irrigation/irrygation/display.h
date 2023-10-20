@@ -16,6 +16,7 @@ public:
     void init();
     void print(int col, int row, int digit);
     void print(int col, int row, char *text);
+    void print(int col, int row, char character);
 };
 
 #endif //IRRYGATION_DISPLAY_H

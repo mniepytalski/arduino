@@ -9,13 +9,21 @@ private:
     int initWorkTime = 25;
     int workCounter = 0;
 
+    int workHour = 8;
+    int workMinute = 0;
+
 public:
-    explicit Pump(int pin);
+    explicit Pump(int pin, int hour, int minute);
     void on();
     void checkAndOff();
     int getPin();
     int getEngineCounter();
     int getWorkCounter();
+
+    int getWorkHour();
+    int getWorkMinute();
+    void setWorkHour(int hour);
+    void setWorkMinute(int minute);
 
 private:
     void off();
